@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-  <canvas id="gameCanvas"></canvas>
+<div id="spooky-bg"></div>
+<canvas id="gameCanvas"></canvas>
 
   <div id="abilities">
   <button onclick="useFocus()">FOCUS</button>
@@ -17,15 +17,10 @@
 </div>
 
   <!-- Mobile Controls -->
-  <div id="controls">
-    <button id="up">▲</button>
-    <div>
-      <button id="left">◀</button>
-      <button id="right">▶</button>
-    </div>
-    <button id="down">▼</button>
-  </div>
-  
+<div id="joystick">
+  <div id="joystick-knob"></div>
+</div>
+
 <audio id="ambient" src="sounds/ambient.mp3" loop></audio>
 <audio id="heartbeat" src="sounds/heartbeat.mp3" loop></audio>
 <audio id="silenceSound" src="sounds/silence.mp3"></audio>

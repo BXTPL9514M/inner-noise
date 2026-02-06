@@ -1,6 +1,7 @@
+
 body {
   margin: 0;
-  background: #0b0b14;
+ background: black;
   overflow: hidden;
   font-family: sans-serif;
 }
@@ -55,5 +56,49 @@ canvas {
 @media (pointer: coarse) {
   #abilities {
     bottom: 100px;
+  }
+}
+/* SPOOKY BACKGROUND */
+#spooky-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(80,80,120,0.25), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(40,40,80,0.25), transparent 45%),
+    linear-gradient(180deg, #0b0b1a, #000000);
+  animation: fogMove 18s linear infinite;
+}
+
+/* Fog movement */
+@keyframes fogMove {
+  0% { filter: blur(0px); }
+  50% { filter: blur(2px); }
+  100% { filter: blur(0px); }
+}
+
+/* Canvas ABOVE background */
+canvas {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+#controls button {
+  touch-action: none;
+}
+#joystick-knob {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+  top: 35px;
+  left: 35px;
+}
+
+/* Show only on mobile */
+@media (pointer: coarse) {
+  #joystick {
+    display: block;
   }
 }

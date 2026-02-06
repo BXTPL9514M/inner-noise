@@ -1,7 +1,7 @@
 // ================= CANVAS =================
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
+ctx.clearRect(0,0,canvas.width,canvas.height);
 // ================= HORROR BACKGROUND DATA =================
 const fogParticles = [];
 
@@ -21,9 +21,19 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 // ================= AUDIO =================
+function unlockAudio() {
+  ambientSound.volume = 0.6;
+  ambientSound.play().catch(() => {});
+  document.removeEventListener("click", unlockAudio);
+  document.removeEventListener("touchstart", unlockAudio);
+}
+
+document.addEventListener("click", unlockAudio);
+document.addEventListener("touchstart", unlockAudio);
+
 const ambientSound = document.getElementById("ambient");
 const heartbeatSound = document.getElementById("heartbeat");
-const silenceSound = document.getElementById("silence");
+const silenceSound = document.getElementById("silenceSound");
 
 let audioStarted = false;
 function startAudio() {
@@ -76,10 +86,91 @@ let survivedTime = 0;
 let activeAbilityText = "";
 let abilityTextTimer = 0;
 
+// ================= MOBILE INPUT =================
+const mobileMove = {
+  up: false,
+  down: false,
+  left: false,
+  right: false
+};
+function bindMobileButton(id, direction) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+
+  btn.addEventListener("touchstart", e => {
+    e.preventDefault();
+    mobileMove[direction] = true;
+  });
+
+  btn.addEventListener("touchend", e => {
+    e.preventDefault();
+    mobileMove[direction] = false;
+  });
+
+  btn.addEventListener("touchcancel", () => {
+    mobileMove[direction] = false;
+  });
+}
+
+bindMobileButton("up", "up");
+bindMobileButton("down", "down");
+bindMobileButton("left", "left");
+bindMobileButton("right", "right");
+
 // ================= INPUT =================
 const keys = {};
 window.addEventListener("keydown", e => keys[e.key] = true);
 window.addEventListener("keyup", e => keys[e.key] = false);
+
+// ================= ANALOG JOYSTICK =================
+const joystick = document.getElementById("joystick");
+const knob = document.getElementById("joystick-knob");
+
+let joyActive = false;
+let joyX = 0;
+let joyY = 0;
+
+const JOY_RADIUS = 40;
+
+function getTouchPos(e) {
+  const touch = e.touches[0];
+  const rect = joystick.getBoundingClientRect();
+  return {
+    x: touch.clientX - rect.left,
+    y: touch.clientY - rect.top
+  };
+}
+
+joystick.addEventListener("touchstart", e => {
+  e.preventDefault();
+  joyActive = true;
+});
+
+joystick.addEventListener("touchmove", e => {
+  if (!joyActive) return;
+  e.preventDefault();
+
+  const pos = getTouchPos(e);
+  const dx = pos.x - 60;
+  const dy = pos.y - 60;
+
+  const dist = Math.min(Math.hypot(dx, dy), JOY_RADIUS);
+  const angle = Math.atan2(dy, dx);
+
+  joyX = Math.cos(angle) * (dist / JOY_RADIUS);
+  joyY = Math.sin(angle) * (dist / JOY_RADIUS);
+
+  knob.style.left = 60 + joyX * JOY_RADIUS - 25 + "px";
+  knob.style.top = 60 + joyY * JOY_RADIUS - 25 + "px";
+});
+
+joystick.addEventListener("touchend", () => {
+  joyActive = false;
+  joyX = 0;
+  joyY = 0;
+  knob.style.left = "35px";
+  knob.style.top = "35px";
+});
 
 // ================= ENEMIES =================
 const thoughts = [];
@@ -147,10 +238,28 @@ function update() {
 
   survivedTime = Math.floor((Date.now() - startTime) / 1000);
 
-  if (keys["w"] || keys["ArrowUp"]) player.y -= player.speed;
-  if (keys["s"] || keys["ArrowDown"]) player.y += player.speed;
-  if (keys["a"] || keys["ArrowLeft"]) player.x -= player.speed;
-  if (keys["d"] || keys["ArrowRight"]) player.x += player.speed;
+// Keyboard movement
+let moveX = 0;
+let moveY = 0;
+
+if (keys["w"] || keys["ArrowUp"]) moveY -= 1;
+if (keys["s"] || keys["ArrowDown"]) moveY += 1;
+if (keys["a"] || keys["ArrowLeft"]) moveX -= 1;
+if (keys["d"] || keys["ArrowRight"]) moveX += 1;
+
+// Analog joystick movement
+moveX += joyX;
+moveY += joyY;
+
+// Normalize diagonal speed
+const len = Math.hypot(moveX, moveY);
+if (len > 0) {
+  moveX /= len;
+  moveY /= len;
+}
+
+player.x += moveX * player.speed;
+player.y += moveY * player.speed;
 
   player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
   player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
@@ -274,9 +383,7 @@ function drawPanicVignette() {
 
   ctx.fillStyle = vignette;
 }
-drawVoidBackground();
-drawFog();
-drawBreathingDarkness();
+
 
 // ================= HORROR BACKGROUND FUNCTIONS =================
 
@@ -314,11 +421,7 @@ function drawMist(ctx, canvas, mistParticles) {
   });
 }
 
-function drawBreathingDarkness() {
-  const breathe = (Math.sin(Date.now() * 0.002) + 1) / 2;
-  ctx.fillStyle = "rgba(0,0,0," + (0.12 + breathe * 0.08) + ")";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
+
 
 function drawVignette() {
   const panic = 1 - clarity / 100;
@@ -344,9 +447,8 @@ let fogTime = 0;
 
 function drawBaseDarkness() {
   const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  bg.addColorStop(0, "#020203");
-  bg.addColorStop(0.5, "#06060d");
-  bg.addColorStop(1, "#000000");
+  bg.addColorStop(0, "#0b0b1a");   // dark blue-black
+  bg.addColorStop(1, "#000000");  // pure black
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -378,31 +480,36 @@ function drawBreathingDarkness() {
 
 // ================= DRAW =================
 function draw() {
-  ctx.setTransform(1, 0, 0, 1, (Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+  ctx.setTransform(
+    1, 0, 0, 1,
+    (Math.random() - 0.5) * shake,
+    (Math.random() - 0.5) * shake
+  );
 
-  drawBaseDarkness();
-  drawMovingFog();
-  drawBreathingDarkness();
-  drawBackground();
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // Player glow
+
+  // PLAYER
   const pulseSize = player.size + Math.sin(player.pulse) * 4;
   const px = player.x + pulseSize / 2;
   const py = player.y + pulseSize / 2;
+
   const glow = ctx.createRadialGradient(px, py, 5, px, py, pulseSize);
   glow.addColorStop(0, "#ffffff");
   glow.addColorStop(1, "rgba(184,198,255,0)");
+
   ctx.fillStyle = glow;
   ctx.beginPath();
   ctx.arc(px, py, pulseSize / 2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Enemies
+  // ENEMIES
   thoughts.forEach(t => {
     ctx.fillStyle = "#ff6b6b";
     ctx.beginPath();
     ctx.arc(t.x, t.y, t.size / 2, 0, Math.PI * 2);
     ctx.fill();
+
     ctx.fillStyle = "#fff";
     ctx.font = "10px monospace";
     ctx.textAlign = "center";
@@ -465,9 +572,7 @@ function draw() {
   }
 
 }
-drawBreathingDarkness();
-drawVignette();
-drawPanicVignette();
+
 
 // ================= LOOP =================
 function loop() {
