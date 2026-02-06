@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  background: #0b0b14;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+
+canvas {
+  display: block;
+}
+
+#controls {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: none;
+}
+
+#controls button {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  margin: 5px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+
+/* Show controls on touch devices */
+@media (pointer: coarse) {
+  #controls {
+    display: block;
+  }
+}
+
+#abilities {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+#abilities button {
+  padding: 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+
+/* Mobile only */
+@media (pointer: coarse) {
+  #abilities {
+    bottom: 100px;
+  }
+}

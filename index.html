@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INNER NOISE</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="abilities">
+  <button onclick="useFocus()">FOCUS</button>
+  <button onclick="useSilence()">SILENCE</button>
+  <button onclick="useAcceptance()">ACCEPT</button>
+</div>
+
+  <!-- Mobile Controls -->
+  <div id="controls">
+    <button id="up">▲</button>
+    <div>
+      <button id="left">◀</button>
+      <button id="right">▶</button>
+    </div>
+    <button id="down">▼</button>
+  </div>
+  
+<audio id="ambient" src="sounds/ambient.mp3" loop></audio>
+<audio id="heartbeat" src="sounds/heartbeat.mp3" loop></audio>
+<audio id="silenceSound" src="sounds/silence.mp3"></audio>
+
+  <script src="game.js"></script>
+</body>
+</html>
